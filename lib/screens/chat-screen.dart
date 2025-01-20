@@ -1,5 +1,6 @@
 import 'package:dartgpt/constant/constants.dart';
 import 'package:dartgpt/services/assets.dart';
+import 'package:dartgpt/widgets/chat-widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
@@ -11,7 +12,7 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  bool isTyping = true;
+  bool isTyping = false;
   TextEditingController textEditingController = TextEditingController();
 
   @override
@@ -19,6 +20,8 @@ class _ChatScreenState extends State<ChatScreen> {
     textEditingController.dispose();
     super.dispose();
   }
+
+  // final list = chatMessages;
 
   @override
   Widget build(BuildContext context) {
@@ -48,15 +51,12 @@ class _ChatScreenState extends State<ChatScreen> {
           children: [
             Flexible(
               child: ListView.builder(
-                itemCount: 6,
+                itemCount: chatMessages.length,
                 itemBuilder: (context, index) {
-                  return const Padding(
+                  return  Padding(
                     padding:
                         EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-                    child: Text(
-                      "Hey my name is harsh",
-                      style: TextStyle(color: Colors.white),
-                    ),
+                    child: ChatBubble(msg: chatMessages[index]['msg'].toString(), index: int.parse(chatMessages[index]['chatIndex'].toString()))
                   );
                 },
               ),
