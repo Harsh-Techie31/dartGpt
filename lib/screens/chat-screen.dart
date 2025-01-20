@@ -1,6 +1,7 @@
 import 'package:dartgpt/constant/constants.dart';
 import 'package:dartgpt/services/assets.dart';
 import 'package:dartgpt/widgets/chat-widget.dart';
+import 'package:dartgpt/widgets/drop-down.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
@@ -39,7 +40,23 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
         actions: [
           IconButton(
-              onPressed: () {},
+              onPressed: () async{
+                  await showModalBottomSheet(
+                    backgroundColor: scaffoldBackgroundColor,
+                    context: context, builder: (context){
+                    return Padding(
+                      
+                      padding: const EdgeInsets.all(18.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          Text("Choose model : " , style: TextStyle(fontSize: 18 , color: Colors.white ),
+                          ),ModelsDropDown()
+                        ],
+                      ),
+                    );
+                  });
+              },
               icon: Icon(
                 Icons.more_vert,
                 color: Colors.white,
