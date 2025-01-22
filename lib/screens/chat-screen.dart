@@ -1,8 +1,10 @@
 import 'package:dartgpt/constant/constants.dart';
+import 'package:dartgpt/services/api-services.dart';
 import 'package:dartgpt/services/assets.dart';
 import 'package:dartgpt/widgets/chat-widget.dart';
 import 'package:dartgpt/widgets/drop-down.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -15,6 +17,13 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   bool isTyping = false;
   TextEditingController textEditingController = TextEditingController();
+
+  @override
+  void initState() {
+  String openAiApiKey = dotenv.env['OPENAI_API_KEY'] ?? '';
+    
+    super.initState();
+  }
 
   @override
   void dispose() {
@@ -50,7 +59,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          Text("Choose model : " , style: TextStyle(fontSize: 18 , color: Colors.white ),
+                          Text("Choose model : " , style: TextStyle(fontSize: 16 , color: Colors.white ),
                           ),ModelsDropDown()
                         ],
                       ),
@@ -116,7 +125,8 @@ class _ChatScreenState extends State<ChatScreen> {
                           Icons.send,
                           color: Colors.white,
                         ),
-                        onPressed: () {
+                        onPressed: () async{
+                          ApiService.getModels();
                           // TODO: Implement send action
                         },
                       ),
