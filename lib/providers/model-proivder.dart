@@ -5,7 +5,7 @@ import 'package:flutter/widgets.dart';
 
 class ModelsProvider  with ChangeNotifier{
   
-  String currentModel = "tts-1";  
+  String currentModel = "gpt-4";  
   
 
   String get getCurrentModel{

@@ -9,7 +9,6 @@ class ModelsModel {
   /// The root or base path associated with the model.
   final String root;
 
-  /// Constructor for creating a `ModelsModel` instance.
   ModelsModel({
     required this.id,
     required this.created,
