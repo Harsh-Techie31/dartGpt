@@ -1,11 +1,13 @@
 class Message {
   final String role; // "user" or "assistant"
-  final String content;
+  final String content; // The text content of the message
+  final String? url; // Nullable URL field, used only if there's an image or external link
   final DateTime timestamp;
 
   Message({
     required this.role,
     required this.content,
+    this.url, // Optional parameter for URLs
     required this.timestamp,
   });
 
@@ -14,6 +16,7 @@ class Message {
     return {
       'role': role,
       'content': content,
+      'url': url,
       'timestamp': timestamp.toIso8601String(),
     };
   }
@@ -23,6 +26,7 @@ class Message {
     return {
       'role': role,
       'content': content,
+      if (url != null) 'url': url, // Only include 'url' if it’s not null
     };
   }
 
@@ -31,6 +35,7 @@ class Message {
     return Message(
       role: json['role'],
       content: json['content'],
+      url: json['url'], // Handle null URL
       timestamp: DateTime.parse(json['timestamp']),
     );
   }

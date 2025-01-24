@@ -62,27 +62,73 @@ class ApiService {
           "Authorization": "Bearer $apiKey",
           "Content-Type": "application/json"
         },
-        body: jsonEncode({
-          "model": modelid,
-          "messages": jsonDecode(msg) 
-        }),
+        body: jsonEncode({"model": modelid, "messages": jsonDecode(msg)}),
       );
 
-      
-
       if (response.statusCode == 200) {
-
         // log("RESPONSE : ${response.body}");
         Map jsonResponse = jsonDecode(response.body);
 
-        if(jsonResponse["choices"].length >0){
+        if (jsonResponse["choices"].length > 0) {
           // print("[log]ANSWER : ${jsonResponse["choices"][0]["message"]["content"]}");
           return jsonResponse["choices"][0]["message"]["content"];
         }
+      } else {
+        log('Failed to fetch respone . Status code: ${response.statusCode}');
+        log('Response body: ${response.body}');
+      }
+    } catch (error) {
+      log('Exception occurred while fetching respone: $error');
+    }
+    return "";
+  }
 
-         
+  //FOR SENDING MESSAGE WITH IMAGES
+  static Future<String> sendMessageWithUrl(
+      {required String msg, required String imgUrl}) async {
+    final String apiKey = dotenv.env['OPENAI_API_KEY'] ?? '';
 
+    if (apiKey.isEmpty) {
+      log('Error: API key is missing or not configured.');
+      return "";
+    }
 
+    try {
+      // print("[log]model :  $modelid  --  message : $msg");
+      final response = await http.post(
+        Uri.parse("https://api.openai.com/v1/chat/completions"),
+        headers: {
+          "Authorization": "Bearer $apiKey",
+          "Content-Type": "application/json"
+        },
+        body: jsonEncode({
+          "model": "gpt-4o",
+          "messages": [
+            {
+              "role": "user",
+              "content": [
+                {"type": "text", "text": msg},
+                {
+                  "type": "image_url",
+                  "image_url": {
+                    "url":
+                        imgUrl
+                  }
+                }
+              ]
+            }
+          ]
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        // log("RESPONSE : ${response.body}");
+        Map jsonResponse = jsonDecode(response.body);
+
+        if (jsonResponse["choices"].length > 0) {
+          // print("[log]ANSWER : ${jsonResponse["choices"][0]["message"]["content"]}");
+          return jsonResponse["choices"][0]["message"]["content"];
+        }
       } else {
         log('Failed to fetch respone . Status code: ${response.statusCode}');
         log('Response body: ${response.body}');

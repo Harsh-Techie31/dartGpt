@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+// import 'dart:ui_web';
 
 import 'package:dartgpt/constant/constants.dart';
 import 'package:dartgpt/models/message-model.dart';
@@ -29,7 +30,7 @@ class _ChatScreenState extends State<ChatScreen> {
   TextEditingController textEditingController = TextEditingController();
   final ScrollController _scrollController =
       ScrollController(); // Add ScrollController
-
+  Uint8List? _file;
   @override
   void initState() {
     super.initState();
@@ -56,14 +57,7 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final modelsProvider = Provider.of<ModelsProvider>(context);
-    final convoProvider = Provider.of<ConversationProvider>(context);
-
-    Uint8List? _file;
-
-    Future<void> _selectImage(BuildContext context) async {
+      Future<void> _selectImage(BuildContext context) async {
       final ImagePicker picker = ImagePicker();
 
       // Show dialog to choose image source
@@ -145,6 +139,15 @@ class _ChatScreenState extends State<ChatScreen> {
       );
     }
 
+  @override
+  Widget build(BuildContext context) {
+    final modelsProvider = Provider.of<ModelsProvider>(context);
+    final convoProvider = Provider.of<ConversationProvider>(context);
+
+    
+
+
+
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -216,8 +219,10 @@ class _ChatScreenState extends State<ChatScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12.0, vertical: 8.0),
                         child: ChatBubble(
+                         
                           msg: message.content,
-                          index: isUser ? 0 : 1, // User (0) or Assistant (1)
+                          index: isUser ? 0 : 1,
+                          imageUrl: message.url, // User (0) or Assistant (1)
                         ),
                       );
                     },
@@ -236,55 +241,59 @@ class _ChatScreenState extends State<ChatScreen> {
             ],
 
             // Square Box for uploading image (above TextField)
-            Row(
-              mainAxisAlignment:
-                  MainAxisAlignment.end, // Align items to the right
-              children: [
-                if (isUploading)
-                  Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha:  0.5),
-                      borderRadius: BorderRadius.circular(8),
+            Padding(
+              padding: const EdgeInsets.only(right:30, ),
+              child: Row(
+                mainAxisAlignment:
+                    MainAxisAlignment.end, // Align items to the right
+                children: [
+                  if (isUploading)
+                    Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const SpinKitFadingCircle(
+                        color: Colors
+                            .white, // Adjust the color of the spinner as needed
+                        size: 40, // Adjust the size of the spinner as needed
+                      ),
+                    )
+                  else if (uploadedImageUrl != null)
+                    Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Image.network(
+                        uploadedImageUrl!,
+                        fit: BoxFit.cover,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) {
+                            return child; // Image loaded, show the image
+                          } else {
+                            // Show round buffering animation while the image is loading
+                            return Center(
+                              child: SpinKitFadingCircle(
+                                color: Colors
+                                    .white, // Adjust the color of the spinner
+                                size: 40, // Adjust the size of the spinner
+                              ),
+                            );
+                          }
+                        },
+                      ),
                     ),
-                    child: const SpinKitFadingCircle(
-                      color: Colors
-                          .white, // Adjust the color of the spinner as needed
-                      size: 40, // Adjust the size of the spinner as needed
-                    ),
-                  )
-                else if (uploadedImageUrl != null)
-                  Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Image.network(
-                      uploadedImageUrl!,
-                      fit: BoxFit.cover,
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) {
-                          return child; // Image loaded, show the image
-                        } else {
-                          // Show round buffering animation while the image is loading
-                          return Center(
-                            child: SpinKitFadingCircle(
-                              color: Colors
-                                  .white, // Adjust the color of the spinner
-                              size: 40, // Adjust the size of the spinner
-                            ),
-                          );
-                        }
-                      },
-                    ),
-                  ),
-              ],
+                ],
+              ),
             ),
 
             Padding(
-              padding: const EdgeInsets.all(12.0),
+              padding: const EdgeInsets.only(
+                  left: 12.0, right: 12, bottom: 12, top: 4),
               child: Row(
                 children: [
                   // Plus Icon to the left of the TextField
@@ -328,13 +337,29 @@ class _ChatScreenState extends State<ChatScreen> {
                               icon: const Icon(Icons.send, color: Colors.white),
                               onPressed: () {
                                 // Send the message along with the image (if exists)
+                                if(uploadedImageUrl ==null){
                                 convoProvider.addUserMessage(
+                                  
                                   textEditingController.text,
                                   modelsProvider.getCurrentModel,
+                                  null
+                                  
+                                  // imageUrl: uploadedImageUrl,
+                                );}else{
+                                  convoProvider.addUserMessage(
+                                  
+                                  textEditingController.text,
+                                  modelsProvider.getCurrentModel,
+                                  uploadedImageUrl                                  
                                   // imageUrl: uploadedImageUrl,
                                 );
+
+                                }
                                 textEditingController.clear();
-                                setState(() => isTyping = true);
+                                setState(() {
+                                isTyping = true;
+                                uploadedImageUrl = null; // Clear the uploaded image
+                              });
 
                                 convoProvider.addListener(() {
                                   setState(() => isTyping = false);
