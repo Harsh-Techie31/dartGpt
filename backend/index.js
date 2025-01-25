@@ -81,7 +81,7 @@ app.get("/get-conversations", async (req, res) => {
       createdAt: -1,
     });
 
-    res.send("harsh gir gaya aaj")
+    // res.send("harsh gir gaya aaj")
 
     if (!conversations || conversations.length === 0) {
       return res.status(404).json({ msg: "No conversations found." });
