@@ -61,21 +61,47 @@ app.post("/post-data", async (req, res) => {
   }
 });
 
-app.get("/user-data", async (req, res) => {
-  const email = req.query.email;
+// app.get("/user-data", async (req, res) => {
+//   const email = req.query.email;
 
+//   try {
+//     const user = await User.findOne({ email });
+
+//     if (!user) {
+//       return res.status(404).json({ msg: "User not found" });
+//     }
+
+//     return res.status(200).json({
+//       msg: "User fetched successfully",
+//       user: { id: user._id, username: user.email },
+//     });
+//   } catch (error) {
+//     return res.status(400).json({ msg: error.message });
+//   }
+// });
+app.get("/get-conversations", async (req, res) => {
   try {
-    const user = await User.findOne({ email });
+    // Fetch only the convoId and convoTitle from the database
+    // Sort by createdAt field in descending order to get the latest conversations first
+    const conversations = await Conversation.find({}, "convoId convoTitle")
+      .sort({ createdAt: -1 }); // Sort by createdAt in descending order
 
-    if (!user) {
-      return res.status(404).json({ msg: "User not found" });
+    // If no conversations are found
+    if (!conversations || conversations.length === 0) {
+      return res.status(404).json({ msg: "No conversations found." });
     }
 
+    // Send the conversations as the response
     return res.status(200).json({
-      msg: "User fetched successfully",
-      user: { id: user._id, username: user.email },
+      msg: "Conversations fetched successfully.",
+      conversations,
     });
   } catch (error) {
-    return res.status(400).json({ msg: error.message });
+    // Handle errors
+    return res.status(500).json({
+      msg: "An error occurred while fetching conversations.",
+      error: error.message,
+    });
   }
 });
+

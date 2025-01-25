@@ -5,6 +5,7 @@ import 'package:dartgpt/constant/constants.dart';
 import 'package:dartgpt/models/message-model.dart';
 import 'package:dartgpt/providers/conversation-provider.dart';
 import 'package:dartgpt/providers/model-proivder.dart';
+import 'package:dartgpt/screens/previous-convos.dart';
 import 'package:dartgpt/services/api-services.dart';
 import 'package:dartgpt/services/assets.dart';
 // import 'package:dartgpt/services/image-pick.dart';
@@ -18,13 +19,16 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 class ChatScreen extends StatefulWidget {
-  const ChatScreen({super.key});
+  final String? conversationId; // Pass the conversationId
+
+  const ChatScreen({super.key, this.conversationId});
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
 }
 
 class _ChatScreenState extends State<ChatScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   bool isTyping = false;
   bool isUploading = false; // Track upload state
   String? uploadedImageUrl; // Store the uploaded image URL
@@ -35,11 +39,19 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
+    if (widget.conversationId != null) {
+      _loadConversation(widget.conversationId!);
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final convoProvider =
           Provider.of<ConversationProvider>(context, listen: false);
       convoProvider.initializeConversation();
     });
+  }
+
+  void _loadConversation(String convoId) {
+    // Fetch the conversation using API or from a provider
+    // Use convoId to fetch the messages for that specific conversation
   }
 
   @override
@@ -58,91 +70,92 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-      Future<void> _selectImage(BuildContext context) async {
-      final ImagePicker picker = ImagePicker();
+  Future<void> _selectImage(BuildContext context) async {
+    final ImagePicker picker = ImagePicker();
 
-      // Show dialog to choose image source
-      return showDialog(
-        context: context,
-        builder: (context) {
-          return SimpleDialog(
-            title: const Center(
-              child: Text(
-                "Pick an Image",
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
+    // Show dialog to choose image source
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return SimpleDialog(
+          title: const Center(
+            child: Text(
+              "Pick an Image",
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            children: [
-              buildDialogOption(
-                context,
-                label: "Take a Photo",
-                icon: Icons.camera_alt_outlined,
-                onTap: () async {
-                  Navigator.pop(context);
-                  // Pick image from camera
-                  _file = await picker
-                      .pickImage(source: ImageSource.camera)
-                      .then((pickedFile) => pickedFile?.readAsBytes());
-                  if (_file != null) {
+          ),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          children: [
+            buildDialogOption(
+              context,
+              label: "Take a Photo",
+              icon: Icons.camera_alt_outlined,
+              onTap: () async {
+                Navigator.pop(context);
+                // Pick image from camera
+                _file = await picker
+                    .pickImage(source: ImageSource.camera)
+                    .then((pickedFile) => pickedFile?.readAsBytes());
+                if (_file != null) {
+                  setState(() {
+                    isUploading = true; // Start uploading
+                  });
+                  String? url =
+                      await uploadImageToCloudinary(_file!); // Upload the file
+                  if (url != null) {
                     setState(() {
-                      isUploading = true; // Start uploading
+                      isUploading = false;
+                      uploadedImageUrl = url; // Store the URL
                     });
-                    String? url = await uploadImageToCloudinary(
-                        _file!); // Upload the file
-                    if (url != null) {
-                      setState(() {
-                        isUploading = false;
-                        uploadedImageUrl = url; // Store the URL
-                      });
-                    }
                   }
-                },
-              ),
-              const Divider(height: 1, thickness: 1),
-              buildDialogOption(
-                context,
-                label: "Choose a Photo",
-                icon: Icons.photo_library_outlined,
-                onTap: () async {
-                  Navigator.pop(context);
-                  // Pick image from gallery
-                  _file = await picker
-                      .pickImage(source: ImageSource.gallery)
-                      .then((pickedFile) => pickedFile?.readAsBytes());
-                  if (_file != null) {
+                }
+              },
+            ),
+            const Divider(height: 1, thickness: 1),
+            buildDialogOption(
+              context,
+              label: "Choose a Photo",
+              icon: Icons.photo_library_outlined,
+              onTap: () async {
+                Navigator.pop(context);
+                // Pick image from gallery
+                _file = await picker
+                    .pickImage(source: ImageSource.gallery)
+                    .then((pickedFile) => pickedFile?.readAsBytes());
+                if (_file != null) {
+                  setState(() {
+                    isUploading = true; // Start uploading
+                  });
+                  String? url =
+                      await uploadImageToCloudinary(_file!); // Upload the file
+                  if (url != null) {
                     setState(() {
-                      isUploading = true; // Start uploading
+                      isUploading = false;
+                      uploadedImageUrl = url; // Store the URL
                     });
-                    String? url = await uploadImageToCloudinary(
-                        _file!); // Upload the file
-                    if (url != null) {
-                      setState(() {
-                        isUploading = false;
-                        uploadedImageUrl = url; // Store the URL
-                      });
-                    }
                   }
-                },
-              ),
-              const Divider(height: 1, thickness: 1),
-              buildDialogOption(
-                context,
-                label: "Cancel",
-                icon: Icons.close,
-                isCancel: true,
-                onTap: () => Navigator.pop(context),
-              ),
-            ],
-          );
-        },
-      );
-    }
-  Future<void> _handleNewConversation(ConversationProvider convoProvider) async {
+                }
+              },
+            ),
+            const Divider(height: 1, thickness: 1),
+            buildDialogOption(
+              context,
+              label: "Cancel",
+              icon: Icons.close,
+              isCancel: true,
+              onTap: () => Navigator.pop(context),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
-    String title = await  convoProvider.finalizeConversationTitle();
-    String convoid  = await  convoProvider.conversationId;
+  Future<void> _handleNewConversation(
+      ConversationProvider convoProvider) async {
+    String title = await convoProvider.finalizeConversationTitle();
+    String convoid = convoProvider.conversationId;
 
     // Save the current conversation to MongoDB
     bool success = await ApiService.saveConversation(
@@ -164,30 +177,26 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-
-
-
-
-
-
-
+  Future<List<Map<String, dynamic>>> fetchConvos() async {
+    return await ApiService.getAllConversations();
+  }
 
   @override
   Widget build(BuildContext context) {
     final modelsProvider = Provider.of<ModelsProvider>(context);
     final convoProvider = Provider.of<ConversationProvider>(context);
 
-    
-
-
-
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
         centerTitle: true,
         elevation: 2,
-        leading: Padding(
-          padding: const EdgeInsets.all(8),
-          child: Image.asset(assetholder.openai),
+        leading: IconButton(
+          icon: const Icon(Icons.menu, color: Colors.white), // Hamburger Icon
+          onPressed: () {
+            _scaffoldKey.currentState?.openDrawer(); 
+            print("[log] opened drawer");
+          },
         ),
         title: const Text(
           "dartGpt",
@@ -225,6 +234,62 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
         ],
       ),
+      drawer: Drawer(
+        child: FutureBuilder<List<Map<String, dynamic>>>(
+          future:  fetchConvos(), // Future to fetch past conversations
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (snapshot.hasError) {
+              return Center(child: Text("Error: ${snapshot.error}"));
+            }
+
+            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return const Center(child: Text("No past conversations found."));
+            }
+
+            // If data is available, show the list of past conversations
+            return SafeArea(
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: <Widget>[
+                  SizedBox(
+                    height: 60,
+                    child: DrawerHeader(
+                      padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                      decoration: BoxDecoration(
+                        color: Colors.blue,
+                      ),
+                      child: Text(
+                        'Past Conversations',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Loop through the fetched conversations and display them
+                  ...snapshot.data!.map((convo) {
+                    return ListTile(
+                      title: Text(convo['convoTitle']),
+                      onTap: () {
+                        // Handle interaction for specific conversation
+                        print("[log]Selected: $convo");
+                        Navigator.pop(context);
+                        print("[log]Closed DRAWER");
+                         // Close the drawer
+                      },
+                    );
+                  })
+                ],
+              ),
+            );
+          },
+        ),
+      ),
       body: SafeArea(
         child: Column(
           children: [
@@ -257,7 +322,6 @@ class _ChatScreenState extends State<ChatScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12.0, vertical: 8.0),
                         child: ChatBubble(
-                         
                           msg: message.content,
                           index: isUser ? 0 : 1,
                           imageUrl: message.url, // User (0) or Assistant (1)
@@ -280,7 +344,9 @@ class _ChatScreenState extends State<ChatScreen> {
 
             // Square Box for uploading image (above TextField)
             Padding(
-              padding: const EdgeInsets.only(right:30, ),
+              padding: const EdgeInsets.only(
+                right: 30,
+              ),
               child: Row(
                 mainAxisAlignment:
                     MainAxisAlignment.end, // Align items to the right
@@ -375,29 +441,28 @@ class _ChatScreenState extends State<ChatScreen> {
                               icon: const Icon(Icons.send, color: Colors.white),
                               onPressed: () {
                                 // Send the message along with the image (if exists)
-                                if(uploadedImageUrl ==null){
-                                convoProvider.addUserMessage(
-                                  
-                                  textEditingController.text,
-                                  modelsProvider.getCurrentModel,
-                                  null
-                                  
-                                  // imageUrl: uploadedImageUrl,
-                                );}else{
+                                if (uploadedImageUrl == null) {
                                   convoProvider.addUserMessage(
-                                  
-                                  textEditingController.text,
-                                  modelsProvider.getCurrentModel,
-                                  uploadedImageUrl                                  
-                                  // imageUrl: uploadedImageUrl,
-                                );
+                                      textEditingController.text,
+                                      modelsProvider.getCurrentModel,
+                                      null
 
+                                      // imageUrl: uploadedImageUrl,
+                                      );
+                                } else {
+                                  convoProvider.addUserMessage(
+                                      textEditingController.text,
+                                      modelsProvider.getCurrentModel,
+                                      uploadedImageUrl
+                                      // imageUrl: uploadedImageUrl,
+                                      );
                                 }
                                 textEditingController.clear();
                                 setState(() {
-                                isTyping = true;
-                                uploadedImageUrl = null; // Clear the uploaded image
-                              });
+                                  isTyping = true;
+                                  uploadedImageUrl =
+                                      null; // Clear the uploaded image
+                                });
 
                                 convoProvider.addListener(() {
                                   setState(() => isTyping = false);
@@ -405,15 +470,19 @@ class _ChatScreenState extends State<ChatScreen> {
                                 });
                               },
                             ),
-
                           ],
                         ),
                       ),
                     ),
                   ),
-                  IconButton(onPressed: (){
-                    ApiService.saveConversation(convoId: "new1", convoTitle: "Third convo", messages: convoProvider.getApiJson() );
-                  }, icon: Icon(Icons.local_dining))
+                  IconButton(
+                      onPressed: () {
+                        ApiService.saveConversation(
+                            convoId: "new1",
+                            convoTitle: "Third convo",
+                            messages: convoProvider.getApiJson());
+                      },
+                      icon: Icon(Icons.local_dining))
                 ],
               ),
             ),

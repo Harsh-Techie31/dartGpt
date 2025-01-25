@@ -175,4 +175,39 @@ class ApiService {
     }
     return false;
   }
+
+
+
+
+  static Future<List<Map<String, dynamic>>> getAllConversations() async {
+    final String backendUrl = 'http://10.85.0.123:2000/get-conversations';
+
+    try {
+      final response = await http.get(
+        Uri.parse(backendUrl),
+        headers: {
+          "Content-Type": "application/json", // Ensure correct content type
+        },
+      );
+
+      if (response.statusCode == 200) {
+        // Parse the response body
+        Map jsonResponse = jsonDecode(response.body);
+        
+        // Return the list of conversations
+        if (jsonResponse['conversations'] != null) {
+          return List<Map<String, dynamic>>.from(jsonResponse['conversations']);
+        } else {
+          log("No conversations found in the response.");
+          return [];
+        }
+      } else {
+        log('Failed to fetch conversations. Status code: ${response.statusCode}');
+        log('Response body: ${response.body}');
+      }
+    } catch (error) {
+      log('Exception occurred while fetching conversations: $error');
+    }
+    return [];
+  }
 }
