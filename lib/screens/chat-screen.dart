@@ -5,6 +5,7 @@ import 'package:dartgpt/constant/constants.dart';
 import 'package:dartgpt/models/message-model.dart';
 import 'package:dartgpt/providers/conversation-provider.dart';
 import 'package:dartgpt/providers/model-proivder.dart';
+import 'package:dartgpt/services/api-services.dart';
 import 'package:dartgpt/services/assets.dart';
 // import 'package:dartgpt/services/image-pick.dart';
 import 'package:dartgpt/services/img-upload.dart';
@@ -37,7 +38,7 @@ class _ChatScreenState extends State<ChatScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final convoProvider =
           Provider.of<ConversationProvider>(context, listen: false);
-      convoProvider.initializeConversation("first convo");
+      convoProvider.initializeConversation();
     });
   }
 
@@ -138,6 +139,38 @@ class _ChatScreenState extends State<ChatScreen> {
         },
       );
     }
+  Future<void> _handleNewConversation(ConversationProvider convoProvider) async {
+
+    String title = await  convoProvider.finalizeConversationTitle();
+    String convoid  = await  convoProvider.conversationId;
+
+    // Save the current conversation to MongoDB
+    bool success = await ApiService.saveConversation(
+      convoId: convoid,
+      convoTitle: title,
+      messages: convoProvider.getApiJson(),
+    );
+
+    if (success) {
+      // Initialize a new conversation
+      convoProvider.initializeConversation();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Conversation saved and new convo started!')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to save the conversation.')),
+      );
+    }
+  }
+
+
+
+
+
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -184,6 +217,11 @@ class _ChatScreenState extends State<ChatScreen> {
               );
             },
             icon: const Icon(Icons.more_vert, color: Colors.white),
+          ),
+          // Add new conversation button
+          IconButton(
+            onPressed: () => _handleNewConversation(convoProvider),
+            icon: const Icon(Icons.add, color: Colors.white),
           ),
         ],
       ),
@@ -367,11 +405,15 @@ class _ChatScreenState extends State<ChatScreen> {
                                 });
                               },
                             ),
+
                           ],
                         ),
                       ),
                     ),
                   ),
+                  IconButton(onPressed: (){
+                    ApiService.saveConversation(convoId: "new1", convoTitle: "Third convo", messages: convoProvider.getApiJson() );
+                  }, icon: Icon(Icons.local_dining))
                 ],
               ),
             ),

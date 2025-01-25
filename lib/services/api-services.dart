@@ -110,10 +110,7 @@ class ApiService {
                 {"type": "text", "text": msg},
                 {
                   "type": "image_url",
-                  "image_url": {
-                    "url":
-                        imgUrl
-                  }
+                  "image_url": {"url": imgUrl}
                 }
               ]
             }
@@ -137,5 +134,45 @@ class ApiService {
       log('Exception occurred while fetching respone: $error');
     }
     return "";
+  }
+
+  static Future<bool> saveConversation({
+    required String convoId,
+    required String convoTitle,
+    required List<Map<String, dynamic>> messages,
+  }) async {
+    final String backendUrl = 'http://10.85.0.123:2000/post-data';
+
+    try {
+      print("[log] reached till localhost api");
+      print("[log] sending data: ${jsonEncode({
+            "convoId": convoId,
+            "convoTitle": convoTitle,
+            "messages": messages, // Don't jsonEncode messages here
+          })}");
+
+      final response = await http.post(
+        Uri.parse(backendUrl),
+        headers: {
+          "Content-Type": "application/json", // Ensure correct content type
+        },
+        body: jsonEncode({
+          "convoId": convoId,
+          "convoTitle": convoTitle,
+          "messages": messages, // Don't jsonEncode messages here
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        log('Conversation saved successfully!');
+        return true;
+      } else {
+        log('Failed to save conversation. Status code: ${response.statusCode}');
+        log('Response body: ${response.body}');
+      }
+    } catch (error) {
+      log('Exception occurred while saving conversation: $error');
+    }
+    return false;
   }
 }

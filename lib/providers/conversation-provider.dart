@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:dartgpt/models/conversation-model.dart';
 import 'package:dartgpt/models/message-model.dart';
 import 'package:dartgpt/services/api-services.dart';
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 
 class ConversationProvider with ChangeNotifier {
   late Conversation _conversation;
@@ -12,12 +14,14 @@ class ConversationProvider with ChangeNotifier {
   bool isTyping = false;
 
   // Initialize a conversation
-  void initializeConversation(String conversationId) {
+  void initializeConversation() {
+    String conversationId = const Uuid().v4();
     _conversation = Conversation(conversationId: conversationId, messages: []);
     _messageStreamController.add(_conversation.messages);
     notifyListeners();
   }
-
+  String get conversationId => _conversation.conversationId;
+  
   Conversation get conversation => _conversation;
 
   Stream<List<Message>> get messageStream => _messageStreamController.stream;
@@ -54,6 +58,16 @@ class ConversationProvider with ChangeNotifier {
     final apiJson = _conversation.toApiJson();
     print("Conversation [log] toApiJson: $apiJson");
   }
+  
+  List<Map<String, String>> getApiJson() {
+  // Decode the JSON string
+  final List<dynamic> decodedJson = jsonDecode(_conversation.toApiJson());
+
+  // Convert each element to Map<String, String>
+  return decodedJson.map<Map<String, String>>((item) {
+    return Map<String, String>.from(item);
+  }).toList();
+}
 
   // Get assistant response from API
   Future<void> _getAssistantResponse(String modelId) async {
@@ -120,9 +134,48 @@ class ConversationProvider with ChangeNotifier {
     notifyListeners();
   }
 
+
+Future<String> finalizeConversationTitle() async {
+  String generatedTitle = await _getConvoTitle();
+  return generatedTitle;
+}
+
+  Future<String> _getConvoTitle() async {
+  try {
+    // Prepare the prompt for title generation
+    String prompt = """
+    Based on the following conversation, generate a concise title (maximum 4 words) that summarizes the chat:
+    
+    Conversation:
+    ${_conversation.messages.map((msg) => "${msg.role}: ${msg.content}").join("\n")}
+    """;
+    String modelId = "gpt-4o";
+    // Send the prompt to GPT-4 API
+    String title = await ApiService.sendMessage(
+      msg: jsonEncode([{"role": "user", "content": prompt}]),
+      modelid: modelId,
+    );
+
+    // Extract the title from the response
+    return title.trim();
+  } catch (e) {
+    print('Error generating conversation title: $e');
+    return "Untitled Conversation";
+  }
+}
+
+
+
+
+
+
   @override
   void dispose() {
     _messageStreamController.close();
     super.dispose();
   }
+
+
+
+
 }
