@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'package:dartgpt/models/message-model.dart';
 import 'package:dartgpt/models/model-models.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -210,4 +211,43 @@ class ApiService {
     }
     return [];
   }
+
+
+  // Add this function in your ApiService class
+static Future<List<Message>> getMessagesForConvoId(String convoId) async {
+  final String backendUrl = 'http://10.85.0.123:2000/get-conversation/$convoId';
+
+  try {
+    final response = await http.get(
+      Uri.parse(backendUrl),
+      headers: {
+        "Content-Type": "application/json", // Ensure correct content type
+      },
+    );
+
+    if (response.statusCode == 200) {
+      // Parse the response body
+      Map jsonResponse = jsonDecode(response.body);
+      
+      // Check if the response contains messages
+      if (jsonResponse['messages'] != null) {
+        // Map the messages to a list of Message objects
+        List<Message> messages = (jsonResponse['messages'] as List)
+            .map((messageJson) => Message.fromJson(messageJson))
+            .toList();
+        return messages;
+      } else {
+        log("No messages found for this conversation.");
+        return [];
+      }
+    } else {
+      log('Failed to fetch messages. Status code: ${response.statusCode}');
+      log('Response body: ${response.body}');
+    }
+  } catch (error) {
+    log('Exception occurred while fetching messages for conversation: $error');
+  }
+  return [];
+}
+
 }

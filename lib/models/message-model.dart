@@ -32,11 +32,22 @@ class Message {
 
   // Create a Message object from JSON
   factory Message.fromJson(Map<String, dynamic> json) {
+    // Checking for the existence of timestamp, if it's in the expected format
+    DateTime parsedTimestamp;
+    if (json['timestamp'] is Map && json['timestamp']['\$date'] != null) {
+      // Handling the case where timestamp is in the MongoDB format
+      parsedTimestamp = DateTime.fromMillisecondsSinceEpoch(
+          int.parse(json['timestamp']['\$date']['\$numberLong']));
+    } else {
+      // If the timestamp is in ISO format or regular DateTime
+      parsedTimestamp = DateTime.parse(json['timestamp']);
+    }
+
     return Message(
       role: json['role'],
       content: json['content'],
       url: json['url'], // Handle null URL
-      timestamp: DateTime.parse(json['timestamp']),
+      timestamp: parsedTimestamp,
     );
   }
 }

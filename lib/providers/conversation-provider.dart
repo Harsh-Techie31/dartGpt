@@ -20,6 +20,12 @@ class ConversationProvider with ChangeNotifier {
     _messageStreamController.add(_conversation.messages);
     notifyListeners();
   }
+  void reInitializeConversation(String id , List<Message> msg) {
+    // String conversationId = const Uuid().v4();
+    _conversation = Conversation(conversationId: id, messages: msg);
+    _messageStreamController.add(_conversation.messages);
+    notifyListeners();
+  }
   String get conversationId => _conversation.conversationId;
   
   Conversation get conversation => _conversation;

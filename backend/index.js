@@ -44,19 +44,36 @@ app.post("/post-data", async (req, res) => {
   }
 
   try {
-    const conversation = await Conversation.create({
-      convoId,
-      convoTitle,
-      messages,
-    });
+    // Check if the conversation already exists
+    const existingConversation = await Conversation.findOne({ convoId });
 
-    return res.status(200).json({
-      msg: "Conversation created successfully!",
-      conversation,
-    });
+    if (existingConversation) {
+      // If the conversation exists, update it with the new messages and title
+      existingConversation.convoTitle = convoTitle;
+      existingConversation.messages = messages;
+
+      await existingConversation.save(); // Save the updated conversation
+
+      return res.status(200).json({
+        msg: "Conversation updated successfully!",
+        conversation: existingConversation,
+      });
+    } else {
+      // If the conversation doesn't exist, create a new one
+      const newConversation = await Conversation.create({
+        convoId,
+        convoTitle,
+        messages,
+      });
+
+      return res.status(200).json({
+        msg: "Conversation created successfully!",
+        conversation: newConversation,
+      });
+    }
   } catch (error) {
     return res.status(400).json({
-      msg: error.message,
+      msg: error.message + " I AM DORaemon [log]",
     });
   }
 });
@@ -104,4 +121,34 @@ app.get("/get-conversations", async (req, res) => {
     });
   }
 });
+
+app.get("/get-conversation/:convoId", async (req, res) => {
+  try {
+    // Get the convoId from the request parameters
+    const convoId = req.params.convoId;
+
+    // Query the database to find the conversation by convoId and exclude the '_id' field from messages
+    const conversation = await Conversation.findOne({ convoId: convoId }).select('convoId messages -_id');
+
+    // If no conversation is found, return an error
+    if (!conversation) {
+      return res.status(404).json({ msg: "Conversation not found." });
+    }
+
+    // Return the convoId and messages of the found conversation, excluding '_id' in messages
+    return res.status(200).json({
+      msg: "Conversation messages fetched successfully.",
+      convoId: conversation.convoId, // Include convoId in the response
+      messages: conversation.messages, // messages without '_id' field
+    });
+  } catch (error) {
+    // Handle errors
+    return res.status(500).json({
+      msg: "An error occurred while fetching the conversation.",
+      error: error.message,
+    });
+  }
+});
+
+
 

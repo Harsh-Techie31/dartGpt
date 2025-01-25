@@ -5,14 +5,14 @@ import 'package:dartgpt/constant/constants.dart';
 import 'package:dartgpt/models/message-model.dart';
 import 'package:dartgpt/providers/conversation-provider.dart';
 import 'package:dartgpt/providers/model-proivder.dart';
-import 'package:dartgpt/screens/previous-convos.dart';
 import 'package:dartgpt/services/api-services.dart';
-import 'package:dartgpt/services/assets.dart';
+// import 'package:dartgpt/services/assets.dart';
 // import 'package:dartgpt/services/image-pick.dart';
 import 'package:dartgpt/services/img-upload.dart';
 import 'package:dartgpt/widgets/chat-widget.dart';
 import 'package:dartgpt/widgets/drop-down.dart';
 import 'package:dartgpt/widgets/image-picker-ui.dart';
+import 'package:dartgpt/widgets/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:image_picker/image_picker.dart';
@@ -275,10 +275,12 @@ class _ChatScreenState extends State<ChatScreen> {
                   ...snapshot.data!.map((convo) {
                     return ListTile(
                       title: Text(convo['convoTitle']),
-                      onTap: () {
+                      onTap: () async {
+                        List<Message> oldChats = await fetchMessages(convo['convoId']);
                         // Handle interaction for specific conversation
                         print("[log]Selected: $convo");
                         Navigator.pop(context);
+                        convoProvider.reInitializeConversation(convo['convoId'] , oldChats);
                         print("[log]Closed DRAWER");
                          // Close the drawer
                       },
@@ -474,15 +476,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         ),
                       ),
                     ),
-                  ),
-                  IconButton(
-                      onPressed: () {
-                        ApiService.saveConversation(
-                            convoId: "new1",
-                            convoTitle: "Third convo",
-                            messages: convoProvider.getApiJson());
-                      },
-                      icon: Icon(Icons.local_dining))
+                  )
                 ],
               ),
             ),
