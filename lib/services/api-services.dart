@@ -137,45 +137,43 @@ class ApiService {
     return "";
   }
 
-  static Future<bool> saveConversation({
-    required String convoId,
-    required String convoTitle,
-    required List<Map<String, dynamic>> messages,
-  }) async {
-    final String backendUrl = 'https://dart-gpt.vercel.app/post-data';
+static Future<bool> saveConversation({
+  required String convoId,
+  required String convoTitle,
+  required List<Map<String, dynamic>> messages,
+}) async {
+  final String backendUrl = 'https://dart-gpt.vercel.app/post-data';
 
-    try {
-      print("[log] reached till localhost api");
-      print("[log] sending data: ${jsonEncode({
-            "convoId": convoId,
-            "convoTitle": convoTitle,
-            "messages": messages, // Don't jsonEncode messages here
-          })}");
-
-      final response = await http.post(
-        Uri.parse(backendUrl),
-        headers: {
-          "Content-Type": "application/json", // Ensure correct content type
-        },
-        body: jsonEncode({
-          "convoId": convoId,
-          "convoTitle": convoTitle,
-          "messages": messages, // Don't jsonEncode messages here
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        log('Conversation saved successfully!');
-        return true;
-      } else {
-        log('Failed to save conversation. Status code: ${response.statusCode}');
-        log('Response body: ${response.body}');
-      }
-    } catch (error) {
-      log('Exception occurred while saving conversation: $error');
-    }
+  if (messages.isEmpty) {
+    log('Failed to save conversation: Messages cannot be empty');
     return false;
   }
+
+  try {
+    final response = await http.post(
+      Uri.parse(backendUrl),
+      headers: {
+        "Content-Type": "application/json", // Ensure correct content type
+      },
+      body: jsonEncode({
+        "convoId": convoId,
+        "convoTitle": convoTitle,
+        "messages": messages, // Don't jsonEncode messages here
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      log('Conversation saved successfully!');
+      return true;
+    } else {
+      log('Failed to save conversation. Status code: ${response.statusCode}');
+      log('Response body: ${response.body}');
+    }
+  } catch (error) {
+    log('Exception occurred while saving conversation: $error');
+  }
+  return false;
+}
 
 
 

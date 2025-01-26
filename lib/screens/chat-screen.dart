@@ -168,7 +168,7 @@ class _ChatScreenState extends State<ChatScreen> {
       // Initialize a new conversation
       convoProvider.initializeConversation();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Conversation saved and new convo started!')),
+        SnackBar(content: Text('Conversaton Saved!')),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -262,8 +262,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   children: <Widget>[
                     const SizedBox(height: 30),
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 5.0, horizontal: 16.0),
+                      padding: const EdgeInsets.only(top: 15.0, left: 20.0),
                       color: Colors.black,
                       child: const Text(
                         'Chats',
@@ -303,12 +302,25 @@ class _ChatScreenState extends State<ChatScreen> {
       body: SafeArea(
         child: Column(
           children: [
+            SizedBox(
+              height: 10,
+            ),
             Flexible(
               child: StreamBuilder<List<Message>>(
                 stream: convoProvider.messageStream, // Listen to updates
                 builder: (context, snapshot) {
-                  if (!snapshot.hasData) {
-                    return const Center(child: CircularProgressIndicator());
+                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    // If no messages, show the placeholder text
+                    return Center(
+                      child: Text(
+                        "What can I help with?", // Your message
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 24,
+                        ),
+                      ),
+                    );
                   }
 
                   final messages = snapshot.data!;
@@ -328,10 +340,13 @@ class _ChatScreenState extends State<ChatScreen> {
                       final message = messages[index];
                       final isUser = message.role == 'user';
 
-                      return ChatBubble(
-                        msg: message.content,
-                        index: isUser ? 0 : 1,
-                        imageUrl: message.url, // User (0) or Assistant (1)
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: ChatBubble(
+                          msg: message.content,
+                          index: isUser ? 0 : 1,
+                          imageUrl: message.url, // User (0) or Assistant (1)
+                        ),
                       );
                     },
                   );
