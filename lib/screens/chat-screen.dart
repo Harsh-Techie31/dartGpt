@@ -234,67 +234,70 @@ class _ChatScreenState extends State<ChatScreen> {
           // Add new conversation button
         ],
       ),
-      drawer: Drawer(
-        child: FutureBuilder<List<Map<String, dynamic>>>(
-          future: fetchConvos(), // Future to fetch past conversations
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
+      drawer: Container(
+        width: MediaQuery.of(context).size.width *
+            0.7, // Set drawer width to 70% of the screen
+        child: Drawer(
+          child: FutureBuilder<List<Map<String, dynamic>>>(
+            future: fetchConvos(), // Future to fetch past conversations
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-            if (snapshot.hasError) {
-              return Center(child: Text("Error: ${snapshot.error}"));
-            }
+              if (snapshot.hasError) {
+                return Center(child: Text("Error: ${snapshot.error}"));
+              }
 
-            if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return const Center(child: Text("No past conversations found."));
-            }
+              if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return const Center(
+                    child: Text("No past conversations found."));
+              }
 
-            // If data is available, show the list of past conversations
-            return Container(
-              color: Colors.black, // Black background for the entire drawer
-              child: ListView(
-                padding: EdgeInsets.zero,
-                children: <Widget>[
-                  SizedBox(
-                    height: 30,
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 16.0, horizontal: 16.0),
-                    color: Colors.black,
-                    child: const Text(
-                      'Chats',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 26,
-                        fontWeight: FontWeight.bold,
+              // If data is available, show the list of past conversations
+              return Container(
+                color: Colors.black, // Black background for the entire drawer
+                child: ListView(
+                  padding: EdgeInsets.zero,
+                  children: <Widget>[
+                    const SizedBox(height: 30),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 5.0, horizontal: 16.0),
+                      color: Colors.black,
+                      child: const Text(
+                        'Chats',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 26,
+                          // fontWeight: FontWeight,
+                        ),
                       ),
                     ),
-                  ),
-                  Divider(),
+                    const Divider(),
 
-                  // Loop through the fetched conversations and display them
-                  ...snapshot.data!.map<Widget>((convo) {
-                    return ListTile(
-                      title: Text(
-                        convo['convoTitle'],
-                        style:
-                            const TextStyle(color: Colors.white, fontSize: 16),
-                      ),
-                      onTap: () async {
-                        List<Message> oldChats =
-                            await fetchMessages(convo['convoId']);
-                        Navigator.pop(context);
-                        convoProvider.reInitializeConversation(
-                            convo['convoId'], oldChats);
-                      },
-                    );
-                  }),
-                ],
-              ),
-            );
-          },
+                    // Loop through the fetched conversations and display them
+                    ...snapshot.data!.map<Widget>((convo) {
+                      return ListTile(
+                        title: Text(
+                          convo['convoTitle'],
+                          style: const TextStyle(
+                              color: Colors.white, fontSize: 14),
+                        ),
+                        onTap: () async {
+                          List<Message> oldChats =
+                              await fetchMessages(convo['convoId']);
+                          Navigator.pop(context);
+                          convoProvider.reInitializeConversation(
+                              convo['convoId'], oldChats);
+                        },
+                      );
+                    }),
+                  ],
+                ),
+              );
+            },
+          ),
         ),
       ),
       body: SafeArea(
@@ -325,14 +328,10 @@ class _ChatScreenState extends State<ChatScreen> {
                       final message = messages[index];
                       final isUser = message.role == 'user';
 
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12.0, vertical: 8.0),
-                        child: ChatBubble(
-                          msg: message.content,
-                          index: isUser ? 0 : 1,
-                          imageUrl: message.url, // User (0) or Assistant (1)
-                        ),
+                      return ChatBubble(
+                        msg: message.content,
+                        index: isUser ? 0 : 1,
+                        imageUrl: message.url, // User (0) or Assistant (1)
                       );
                     },
                   );
@@ -499,8 +498,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
                                 convoProvider.addListener(() {
                                   setState(() => isTyping = false);
-                                  _scrollToBottom(); 
-                                  });
+                                  _scrollToBottom();
+                                });
                               },
                             ),
                           ],
