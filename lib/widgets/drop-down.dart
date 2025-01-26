@@ -50,7 +50,7 @@ class _ModelsDropDownState extends State<ModelsDropDown> {
           constraints: const BoxConstraints(maxWidth: 220), // Limit width
           child: DropdownButton<String>(
             isExpanded: true, // Allow full width
-            dropdownColor: scaffoldBackgroundColor,
+            dropdownColor: Colors.transparent,
             iconEnabledColor: Colors.white,
             value: currentModel,
             style: const TextStyle(color: Colors.white),

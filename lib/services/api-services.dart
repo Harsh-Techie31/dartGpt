@@ -142,7 +142,7 @@ class ApiService {
     required String convoTitle,
     required List<Map<String, dynamic>> messages,
   }) async {
-    final String backendUrl = 'http://10.85.0.123:2000/post-data';
+    final String backendUrl = 'https://dart-gpt.vercel.app/post-data';
 
     try {
       print("[log] reached till localhost api");
@@ -181,7 +181,7 @@ class ApiService {
 
 
   static Future<List<Map<String, dynamic>>> getAllConversations() async {
-    final String backendUrl = 'http://10.85.0.123:2000/get-conversations';
+    final String backendUrl = 'https://dart-gpt.vercel.app/get-conversations';
 
     try {
       final response = await http.get(
@@ -215,7 +215,7 @@ class ApiService {
 
   // Add this function in your ApiService class
 static Future<List<Message>> getMessagesForConvoId(String convoId) async {
-  final String backendUrl = 'http://10.85.0.123:2000/get-conversation/$convoId';
+  final String backendUrl = 'https://dart-gpt.vercel.app/get-conversation/$convoId';
 
   try {
     final response = await http.get(

@@ -36,8 +36,8 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         title: 'Flutter Demo',
         theme: ThemeData(
-          scaffoldBackgroundColor: scaffoldBackgroundColor,
-          appBarTheme: AppBarTheme(color: cardColor),
+          scaffoldBackgroundColor: Colors.black,
+          appBarTheme: AppBarTheme(color: Colors.black),
           // This is the theme of your application.
           //
           // TRY THIS: Try running your application with "flutter run". You'll see

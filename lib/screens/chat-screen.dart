@@ -189,24 +189,28 @@ class _ChatScreenState extends State<ChatScreen> {
     return Scaffold(
       key: _scaffoldKey,
       appBar: AppBar(
-        centerTitle: true,
+        centerTitle: false,
         elevation: 2,
         leading: IconButton(
           icon: const Icon(Icons.menu, color: Colors.white), // Hamburger Icon
           onPressed: () {
-            _scaffoldKey.currentState?.openDrawer(); 
+            _scaffoldKey.currentState?.openDrawer();
             print("[log] opened drawer");
           },
         ),
         title: const Text(
-          "dartGpt",
+          "ChatGPT",
           style: TextStyle(color: Colors.white),
         ),
         actions: [
           IconButton(
+            onPressed: () => _handleNewConversation(convoProvider),
+            icon: const Icon(Icons.edit_note, color: Colors.white),
+          ),
+          IconButton(
             onPressed: () async {
               await showModalBottomSheet(
-                backgroundColor: scaffoldBackgroundColor,
+                backgroundColor: Colors.black,
                 context: context,
                 builder: (context) {
                   return Padding(
@@ -228,15 +232,11 @@ class _ChatScreenState extends State<ChatScreen> {
             icon: const Icon(Icons.more_vert, color: Colors.white),
           ),
           // Add new conversation button
-          IconButton(
-            onPressed: () => _handleNewConversation(convoProvider),
-            icon: const Icon(Icons.add, color: Colors.white),
-          ),
         ],
       ),
       drawer: Drawer(
         child: FutureBuilder<List<Map<String, dynamic>>>(
-          future:  fetchConvos(), // Future to fetch past conversations
+          future: fetchConvos(), // Future to fetch past conversations
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
@@ -251,41 +251,46 @@ class _ChatScreenState extends State<ChatScreen> {
             }
 
             // If data is available, show the list of past conversations
-            return SafeArea(
+            return Container(
+              color: Colors.black, // Black background for the entire drawer
               child: ListView(
                 padding: EdgeInsets.zero,
                 children: <Widget>[
                   SizedBox(
-                    height: 60,
-                    child: DrawerHeader(
-                      padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-                      decoration: BoxDecoration(
-                        color: Colors.blue,
-                      ),
-                      child: Text(
-                        'Past Conversations',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                        ),
+                    height: 30,
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 16.0, horizontal: 16.0),
+                    color: Colors.black,
+                    child: const Text(
+                      'Chats',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
+                  Divider(),
+
                   // Loop through the fetched conversations and display them
-                  ...snapshot.data!.map((convo) {
+                  ...snapshot.data!.map<Widget>((convo) {
                     return ListTile(
-                      title: Text(convo['convoTitle']),
+                      title: Text(
+                        convo['convoTitle'],
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 16),
+                      ),
                       onTap: () async {
-                        List<Message> oldChats = await fetchMessages(convo['convoId']);
-                        // Handle interaction for specific conversation
-                        print("[log]Selected: $convo");
+                        List<Message> oldChats =
+                            await fetchMessages(convo['convoId']);
                         Navigator.pop(context);
-                        convoProvider.reInitializeConversation(convo['convoId'] , oldChats);
-                        print("[log]Closed DRAWER");
-                         // Close the drawer
+                        convoProvider.reInitializeConversation(
+                            convo['convoId'], oldChats);
                       },
                     );
-                  })
+                  }),
                 ],
               ),
             );
@@ -368,30 +373,53 @@ class _ChatScreenState extends State<ChatScreen> {
                       ),
                     )
                   else if (uploadedImageUrl != null)
-                    Container(
-                      width: 100,
-                      height: 100,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Image.network(
-                        uploadedImageUrl!,
-                        fit: BoxFit.cover,
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) {
-                            return child; // Image loaded, show the image
-                          } else {
-                            // Show round buffering animation while the image is loading
-                            return Center(
-                              child: SpinKitFadingCircle(
-                                color: Colors
-                                    .white, // Adjust the color of the spinner
-                                size: 40, // Adjust the size of the spinner
+                    Stack(
+                      children: [
+                        Container(
+                          width: 100,
+                          height: 100,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Image.network(
+                            uploadedImageUrl!,
+                            fit: BoxFit.cover,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) {
+                                return child; // Image loaded, show the image
+                              } else {
+                                return const Center(
+                                  child: SpinKitFadingCircle(
+                                    color: Colors.white,
+                                    size: 40,
+                                  ),
+                                );
+                              }
+                            },
+                          ),
+                        ),
+                        Positioned(
+                          top: 4,
+                          right: 4,
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                uploadedImageUrl =
+                                    null; // Remove the uploaded image
+                              });
+                            },
+                            child: const CircleAvatar(
+                              radius: 12,
+                              backgroundColor: Colors.black54,
+                              child: Icon(
+                                Icons.close,
+                                color: Colors.white,
+                                size: 16,
                               ),
-                            );
-                          }
-                        },
-                      ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                 ],
               ),
@@ -419,7 +447,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   // Material widget for TextField and Send Button
                   Expanded(
                     child: Material(
-                      color: cardColor,
+                      color: Colors.transparent,
                       borderRadius: BorderRadius.circular(25),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
@@ -442,6 +470,9 @@ class _ChatScreenState extends State<ChatScreen> {
                             IconButton(
                               icon: const Icon(Icons.send, color: Colors.white),
                               onPressed: () {
+                                if (textEditingController.text.trim().isEmpty) {
+                                  return; // Don't send the message
+                                }
                                 // Send the message along with the image (if exists)
                                 if (uploadedImageUrl == null) {
                                   convoProvider.addUserMessage(
@@ -468,8 +499,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
                                 convoProvider.addListener(() {
                                   setState(() => isTyping = false);
-                                  _scrollToBottom(); // Ensure scrolling happens
-                                });
+                                  _scrollToBottom(); 
+                                  });
                               },
                             ),
                           ],
