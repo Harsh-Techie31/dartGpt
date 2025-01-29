@@ -29,6 +29,11 @@ const conversationSchema = new mongoose.Schema(
       required: true,
       unique: true, // Ensure each conversation has a unique ID
     },
+    userID: {
+      type: String,
+      required: true,
+      default : "unknown",
+    },
     convoTitle: {
       type: String,
       required: true, // Title of the conversation

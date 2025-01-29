@@ -1,3 +1,4 @@
+import 'package:dartgpt/models/user-mode.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthMethods {
@@ -14,6 +15,11 @@ class AuthMethods {
         UserCredential cred = await _auth.createUserWithEmailAndPassword(
             email: email, password: password);
         // print("REACHED");
+        // User u = _auth.currentUser!;
+        // UserModel hey = UserModel(
+        //     email: email,
+        //     uid: cred.user!.uid,
+        //     );
 
         // Userm hey = Userm(
         //     email: email,

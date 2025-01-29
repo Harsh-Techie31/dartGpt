@@ -139,6 +139,7 @@ class ApiService {
 
 static Future<bool> saveConversation({
   required String convoId,
+  required String userId,
   required String convoTitle,
   required List<Map<String, dynamic>> messages,
 }) async {
@@ -149,6 +150,13 @@ static Future<bool> saveConversation({
     return false;
   }
 
+  // log(jsonEncode({
+  //       "convoId": convoId,
+  //       "userID" : userId,
+  //       "convoTitle": convoTitle,
+  //       "messages": messages, // Don't jsonEncode messages here
+  //     }));
+
   try {
     final response = await http.post(
       Uri.parse(backendUrl),
@@ -157,6 +165,7 @@ static Future<bool> saveConversation({
       },
       body: jsonEncode({
         "convoId": convoId,
+        "userID" : userId,
         "convoTitle": convoTitle,
         "messages": messages, // Don't jsonEncode messages here
       }),

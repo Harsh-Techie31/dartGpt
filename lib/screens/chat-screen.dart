@@ -15,6 +15,7 @@ import 'package:dartgpt/widgets/chat-widget.dart';
 import 'package:dartgpt/widgets/drop-down.dart';
 import 'package:dartgpt/widgets/image-picker-ui.dart';
 import 'package:dartgpt/widgets/utils.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:image_picker/image_picker.dart';
@@ -39,6 +40,8 @@ class _ChatScreenState extends State<ChatScreen> {
   final ScrollController _scrollController =
       ScrollController(); // Add ScrollController
   Uint8List? _file;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
   @override
   void initState() {
     super.initState();
@@ -157,11 +160,14 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _handleNewConversation(
       ConversationProvider convoProvider) async {
+    
     String title = await convoProvider.finalizeConversationTitle();
     String convoid = convoProvider.conversationId;
+    User u = _auth.currentUser!;
 
     // Save the current conversation to MongoDB
     bool success = await ApiService.saveConversation(
+      userId: u.uid,
       convoId: convoid,
       convoTitle: title,
       messages: convoProvider.getApiJson(),

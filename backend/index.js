@@ -37,11 +37,13 @@ main().then(() =>
 
 // Routes
 app.post("/post-data", async (req, res) => {
-  const { convoId, convoTitle, messages } = req.body;
+  console.log("Received request body:", req.body);
+  const { convoId, userID, convoTitle, messages } = req.body;
 
-  if (!convoId || !convoTitle || !Array.isArray(messages)) {
+  // Validate request body
+  if (!convoId || !convoTitle || !Array.isArray(messages) || !userID) {
     return res.status(400).json({
-      msg: "Invalid data. 'convoId', 'convoTitle', and 'messages' are required.",
+      msg: "Invalid data. 'convoId', 'convoTitle', 'messages', and 'userID' are required.",
     });
   }
 
@@ -51,7 +53,9 @@ app.post("/post-data", async (req, res) => {
     if (existingConversation) {
       existingConversation.convoTitle = convoTitle;
       existingConversation.messages = messages;
+      // existingConversation.userID = userID;
       await existingConversation.save();
+
       return res.status(200).json({
         msg: "Conversation updated successfully!",
         conversation: existingConversation,
@@ -61,18 +65,22 @@ app.post("/post-data", async (req, res) => {
         convoId,
         convoTitle,
         messages,
+        userID,
       });
+
       return res.status(200).json({
         msg: "Conversation created successfully!",
         conversation: newConversation,
       });
     }
   } catch (error) {
-    return res.status(400).json({
-      msg: error.message,
+    return res.status(500).json({
+      msg: "Server error",
+      error: error.message,
     });
   }
 });
+
 
 // Other routes...
 app.get("/get-conversations", async (req, res) => {
