@@ -84,15 +84,21 @@ app.post("/post-data", async (req, res) => {
 
 // Other routes...
 app.get("/get-conversations", async (req, res) => {
-  try {
-    const conversations = await Conversation.find({}, "convoId convoTitle").sort({
-      createdAt: -1,
-    });
+  const { userID } = req.query;  // Accept userID from query parameters
 
-    // res.send("harsh gir gaya aaj")
+  // Check if userID is provided
+  if (!userID) {
+    return res.status(400).json({ msg: "userID is required." });
+  }
+
+  try {
+    // Find conversations where userID matches the provided userID
+    const conversations = await Conversation.find({ userID })
+      .select("convoId convoTitle")  // Only return convoId and convoTitle
+      .sort({ createdAt: -1 });
 
     if (!conversations || conversations.length === 0) {
-      return res.status(404).json({ msg: "No conversations found." });
+      return res.status(404).json({ msg: "No conversations found for the specified user." });
     }
 
     return res.status(200).json({

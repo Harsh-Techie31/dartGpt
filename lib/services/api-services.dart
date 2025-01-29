@@ -143,7 +143,8 @@ static Future<bool> saveConversation({
   required String convoTitle,
   required List<Map<String, dynamic>> messages,
 }) async {
-  final String backendUrl = 'https://dart-gpt.vercel.app/post-data';
+  final String backendUrl = 'https://dartgpt.vercel.app/post-data';
+  
 
   if (messages.isEmpty) {
     log('Failed to save conversation: Messages cannot be empty');
@@ -188,7 +189,7 @@ static Future<bool> saveConversation({
 
 
   static Future<List<Map<String, dynamic>>> getAllConversations() async {
-    final String backendUrl = 'https://dart-gpt.vercel.app/get-conversations';
+    final String backendUrl = 'https://dartgpt.vercel.app/get-conversations';
     
 
     try {
@@ -223,7 +224,7 @@ static Future<bool> saveConversation({
 
   // Add this function in your ApiService class
 static Future<List<Message>> getMessagesForConvoId(String convoId) async {
-  final String backendUrl = 'https://dart-gpt.vercel.app/get-conversation/$convoId';
+  final String backendUrl = 'https://dartgpt.vercel.app/get-conversation/$convoId';
 
   try {
     final response = await http.get(
