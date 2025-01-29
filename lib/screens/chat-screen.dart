@@ -41,6 +41,9 @@ class _ChatScreenState extends State<ChatScreen> {
       ScrollController(); // Add ScrollController
   Uint8List? _file;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  TextEditingController _searchController = TextEditingController();
+  List<Map<String, dynamic>> _filteredConversations = [];
+  List<Map<String, dynamic>> _allConversations = [];
 
   @override
   void initState() {
@@ -53,6 +56,7 @@ class _ChatScreenState extends State<ChatScreen> {
           Provider.of<ConversationProvider>(context, listen: false);
       convoProvider.initializeConversation();
     });
+    _fetchConversations();
   }
 
   void _loadConversation(String convoId) {
@@ -160,7 +164,6 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _handleNewConversation(
       ConversationProvider convoProvider) async {
-    
     String title = await convoProvider.finalizeConversationTitle();
     String convoid = convoProvider.conversationId;
     User u = _auth.currentUser!;
@@ -188,7 +191,28 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<List<Map<String, dynamic>>> fetchConvos() async {
     User u = _auth.currentUser!;
-    return await ApiService.getAllConversations(userId: u.uid );
+    return await ApiService.getAllConversations(userId: u.uid);
+  }
+
+  Future<void> _fetchConversations() async {
+    List<Map<String, dynamic>> convos = await fetchConvos();
+    setState(() {
+      _allConversations = convos;
+      _filteredConversations = convos; // Initially, show all conversations
+    });
+  }
+
+  void _filterConversations(String query) {
+    setState(() {
+      if (query.isEmpty) {
+        _filteredConversations = _allConversations;
+      } else {
+        _filteredConversations = _allConversations
+            .where((convo) =>
+                convo['convoTitle'].toLowerCase().contains(query.toLowerCase()))
+            .toList();
+      }
+    });
   }
 
   @override
@@ -213,15 +237,6 @@ class _ChatScreenState extends State<ChatScreen> {
           style: TextStyle(color: Colors.white),
         ),
         actions: [
-          IconButton(onPressed: () async{
-            String ans = await AM.logout();
-
-            if(ans == 'done'){
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) =>  LoginPage()));
-            }
-
-          }, icon: Icon(Icons.logout , color: Colors.white,)),
-
           IconButton(
             onPressed: () => _handleNewConversation(convoProvider),
             icon: const Icon(Icons.edit_note, color: Colors.white),
@@ -253,68 +268,124 @@ class _ChatScreenState extends State<ChatScreen> {
           // Add new conversation button
         ],
       ),
-      drawer: Container(
-        width: MediaQuery.of(context).size.width *
-            0.7, // Set drawer width to 70% of the screen
+      drawer: SizedBox(
+        width: MediaQuery.of(context).size.width * 0.7,
         child: Drawer(
-          child: FutureBuilder<List<Map<String, dynamic>>>(
-            future: fetchConvos(), // Future to fetch past conversations
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
+          backgroundColor: Colors.black,
+          child: SafeArea(
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              color: Colors.black, // Black background for the entire drawer
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // SizedBox(height: 30,),
 
-              if (snapshot.hasError) {
-                return Center(child: Text("Error: ${snapshot.error}"));
-              }
-
-              if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return const Center(
-                    child: Text("No past conversations found."));
-              }
-
-              // If data is available, show the list of past conversations
-              return Container(
-                color: Colors.black, // Black background for the entire drawer
-                child: ListView(
-                  padding: EdgeInsets.zero,
-                  children: <Widget>[
-                    const SizedBox(height: 30),
-                    Container(
-                      padding: const EdgeInsets.only(top: 15.0, left: 20.0),
-                      color: Colors.black,
-                      child: const Text(
-                        'Chats',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 26,
-                          // fontWeight: FontWeight,
-                        ),
+                  TextField(
+                    controller: _searchController,
+                    onChanged: _filterConversations, // Real-time filtering
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      hintText: "Search conversations...",
+                      hintStyle: const TextStyle(color: Colors.grey),
+                      prefixIcon: const Icon(Icons.search, color: Colors.white),
+                      filled: true,
+                      fillColor: Colors.grey[900],
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(25),
+                        borderSide: BorderSide.none,
                       ),
                     ),
-                    const Divider(),
+                  ),
+                  // const SizedBox(height: 10),
 
-                    // Loop through the fetched conversations and display them
-                    ...snapshot.data!.map<Widget>((convo) {
-                      return ListTile(
-                        title: Text(
-                          convo['convoTitle'],
+                  // Header
+                  Container(
+                    padding: const EdgeInsets.only(top: 10.0, left: 10),
+                    color: Colors.black,
+                    child: const Text(
+                      'Chats',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ),
+
+                  const Divider(
+                    thickness: 0.5,
+                  ),
+
+                  // Search Bar
+
+                  const SizedBox(height: 10),
+
+                  // List of Conversations
+                  Expanded(
+                    child: _filteredConversations.isEmpty
+                        ? const Center(
+                            child: Text("No matching conversations found.",
+                                style: TextStyle(color: Colors.white)))
+                        : ListView.builder(
+                            padding: EdgeInsets.zero,
+                            itemCount: _filteredConversations.length,
+                            itemBuilder: (context, index) {
+                              final convo = _filteredConversations[index];
+                              return ListTile(
+                                title: Text(
+                                  convo['convoTitle'],
+                                  style: const TextStyle(
+                                      color: Colors.white, fontSize: 16),
+                                ),
+                                onTap: () async {
+                                  List<Message> oldChats =
+                                      await fetchMessages(convo['convoId']);
+                                  Navigator.pop(context);
+                                  convoProvider.reInitializeConversation(
+                                      convo['convoId'], oldChats);
+                                },
+                              );
+                            },
+                          ),
+                  ),
+                  Row(
+                    spacing: 5,
+                    children: [
+                      CircleAvatar(
+                        backgroundImage: AssetImage("assets/boy.png"),
+                        radius: 17,
+                      ),
+                      SizedBox(
+                        width: 160, // You can adjust this value as needed
+                        child: Text(
+                          FirebaseAuth.instance.currentUser!.email ?? "SampleUser@gmail.com",
+                          overflow: TextOverflow
+                              .ellipsis, // Truncates text with ellipsis if it overflows
                           style: const TextStyle(
-                              color: Colors.white, fontSize: 14),
+                              color: Colors.white, fontSize: 15),
+                          maxLines: 1, // Limits to one line
                         ),
-                        onTap: () async {
-                          List<Message> oldChats =
-                              await fetchMessages(convo['convoId']);
-                          Navigator.pop(context);
-                          convoProvider.reInitializeConversation(
-                              convo['convoId'], oldChats);
-                        },
-                      );
-                    }),
-                  ],
-                ),
-              );
-            },
+                      ),
+                      IconButton(
+                          onPressed: () async {
+                            String ans = await AM.logout();
+
+                            if (ans == 'done') {
+                              Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => LoginPage()));
+                            }
+                          },
+                          icon: Icon(
+                            Icons.logout,
+                            color: Colors.white,
+                          )),
+                    ],
+                  )
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -487,6 +558,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12.0, vertical: 4.0),
                         child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             // TextField for typing the message
                             Expanded(
