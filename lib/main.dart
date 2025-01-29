@@ -1,8 +1,12 @@
 import 'dart:developer';
-import 'package:dartgpt/constant/constants.dart';
+import 'package:dartgpt/firebase_options.dart';
 import 'package:dartgpt/providers/conversation-provider.dart';
 import 'package:dartgpt/providers/model-proivder.dart';
 import 'package:dartgpt/screens/chat-screen.dart';
+import 'package:dartgpt/screens/login-screen.dart';
+import 'package:dartgpt/screens/sign-up-screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
@@ -12,6 +16,9 @@ void main() async {
   await dotenv.load(fileName: ".env");
   log("harsh");
   // log(openAiApiKey);
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+);
   runApp(const MyApp());
 }
 
@@ -56,7 +63,28 @@ class MyApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
           useMaterial3: true,
         ),
-        home: const ChatScreen(),
+        // home: const ChatScreen(),
+        // home:  SignUpPage(),
+        home:  StreamBuilder(
+              stream: FirebaseAuth.instance.authStateChanges(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.active) {
+                  if (snapshot.hasData) {
+                    return ChatScreen(); 
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text(snapshot.error.toString()));
+                  }
+                }
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                    ),
+                  );
+                }
+
+                return  LoginPage();
+              }),
       ),
     );
   }

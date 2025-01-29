@@ -1,11 +1,13 @@
 import 'dart:typed_data';
 // import 'dart:ui_web';
 
-import 'package:dartgpt/constant/constants.dart';
+// import 'package:dartgpt/constant/constants.dart';
 import 'package:dartgpt/models/message-model.dart';
 import 'package:dartgpt/providers/conversation-provider.dart';
 import 'package:dartgpt/providers/model-proivder.dart';
+import 'package:dartgpt/screens/login-screen.dart';
 import 'package:dartgpt/services/api-services.dart';
+import 'package:dartgpt/services/auths.dart';
 // import 'package:dartgpt/services/assets.dart';
 // import 'package:dartgpt/services/image-pick.dart';
 import 'package:dartgpt/services/img-upload.dart';
@@ -28,6 +30,7 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
+  AuthMethods AM = AuthMethods();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   bool isTyping = false;
   bool isUploading = false; // Track upload state
@@ -203,6 +206,15 @@ class _ChatScreenState extends State<ChatScreen> {
           style: TextStyle(color: Colors.white),
         ),
         actions: [
+          IconButton(onPressed: () async{
+            String ans = await AM.logout();
+
+            if(ans == 'done'){
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) =>  LoginPage()));
+            }
+
+          }, icon: Icon(Icons.logout , color: Colors.white,)),
+
           IconButton(
             onPressed: () => _handleNewConversation(convoProvider),
             icon: const Icon(Icons.edit_note, color: Colors.white),
@@ -443,6 +455,7 @@ class _ChatScreenState extends State<ChatScreen> {
               padding: const EdgeInsets.only(
                   left: 12.0, right: 12, bottom: 12, top: 4),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   // Plus Icon to the left of the TextField
                   Container(
@@ -470,13 +483,27 @@ class _ChatScreenState extends State<ChatScreen> {
                           children: [
                             // TextField for typing the message
                             Expanded(
-                              child: TextField(
-                                controller: textEditingController,
-                                style: const TextStyle(color: Colors.white),
-                                decoration: const InputDecoration(
-                                  hintText: "Type a message...",
-                                  hintStyle: TextStyle(color: Colors.grey),
-                                  border: InputBorder.none,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors
+                                      .grey[900], // Slight greyish background
+                                  borderRadius: BorderRadius.circular(
+                                      30), // Rounded corners for better UI
+                                ),
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 4), // Inner spacing
+                                child: TextField(
+                                  controller: textEditingController,
+                                  minLines: 1, // Starts with 1 line
+                                  maxLines: 9, // Expands up to 9 lines
+                                  style: const TextStyle(color: Colors.white),
+                                  decoration: const InputDecoration(
+                                    hintText: "Type a message...",
+                                    hintStyle: TextStyle(color: Colors.grey),
+                                    border: InputBorder
+                                        .none, // No border for a clean look
+                                  ),
                                 ),
                               ),
                             ),

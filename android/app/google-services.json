@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "112965137189",
+    "project_id": "dartgpt-b0795",
+    "storage_bucket": "dartgpt-b0795.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:112965137189:android:23a6729e3db9a75df6e0cc",
+        "android_client_info": {
+          "package_name": "com.example.dartgpt"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAkON4v9FQZYN7HtovDLn6CEe67--sgdU0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
