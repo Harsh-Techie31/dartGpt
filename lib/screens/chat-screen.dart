@@ -187,7 +187,8 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<List<Map<String, dynamic>>> fetchConvos() async {
-    return await ApiService.getAllConversations();
+    User u = _auth.currentUser!;
+    return await ApiService.getAllConversations(userId: u.uid );
   }
 
   @override

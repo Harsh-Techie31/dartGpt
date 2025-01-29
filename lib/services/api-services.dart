@@ -2,10 +2,13 @@ import 'dart:convert';
 import 'dart:developer';
 import 'package:dartgpt/models/message-model.dart';
 import 'package:dartgpt/models/model-models.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+
 class ApiService {
+
   static Future<List<ModelsModel>> getModels() async {
     final String apiKey = dotenv.env['OPENAI_API_KEY'] ?? '';
 
@@ -188,8 +191,10 @@ static Future<bool> saveConversation({
 
 
 
-  static Future<List<Map<String, dynamic>>> getAllConversations() async {
-    final String backendUrl = 'https://dartgpt.vercel.app/get-conversations';
+  static Future<List<Map<String, dynamic>>> getAllConversations(
+    {required String userId,}
+  ) async {
+    final String backendUrl = 'https://dartgpt.vercel.app/get-conversations?userID=$userId';
     
 
     try {
